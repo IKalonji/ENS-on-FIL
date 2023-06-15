@@ -1,0 +1,93 @@
+ipfs://bafyreifrkkhbwkf3fibwhbzcmpqnmh3b4t5t4ig7qdtymkdoatcycwe6n4/metadata.jsonimport React, { Component } from 'react';
+import Box from '@mui/material/Box';
+import Stepper from '@mui/material/Stepper';
+import Step from '@mui/material/Step';
+import StepLabel from '@mui/material/StepLabel';
+import Button from '@mui/material/Button';
+
+import ConnectENS from './ConnectENS';
+import SendFIL from './SendFIL';
+import AllStepsDone from './AllStepsDone';
+import { StateSingleton } from '../AppState/state.store';
+
+const steps = ['Connect to ENS', 'Send FIL', 'Done'];
+
+class StepperComponent extends Component {
+  constructor() {
+    super();
+    this.state = {
+      activeStep: 0,
+      isConnectedToMetaMask: false,
+    };
+  }
+
+  handleConnectMetaMask = async () => {
+    const singletonInstance = new StateSingleton();
+    const isConnected = await singletonInstance.connectToMetaMask();
+
+    if (isConnected) {
+      this.setState({
+        isConnectedToMetaMask: true,
+        activeStep: 1, // Move to step two
+      });
+    }
+  };
+
+  handleNext = () => {
+    this.setState((prevState) => ({
+      activeStep: prevState.activeStep + 1,
+    }));
+  };
+
+  renderStepContent = (step) => {
+    switch (step) {
+      case 0:
+        return <ConnectENS handleConnectMetaMask={this.handleConnectMetaMask} />;
+      case 1:
+        return <SendFIL />;
+      case 2:
+        return <AllStepsDone />;
+      default:
+        return null;
+    }
+  };
+
+  render() {
+    const { activeStep, isConnectedToMetaMask } = this.state;
+
+    return (
+      <Box sx={{ width: '100%', padding: 3 }}>
+        <Stepper activeStep={activeStep} alternativeLabel>
+          {steps.map((label, index) => (
+            <Step key={label}>
+              <StepLabel>{label}</StepLabel>
+            </Step>
+          ))}
+        </Stepper>
+
+        {this.renderStepContent(activeStep)}
+
+        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
+          {activeStep === 0 && !isConnectedToMetaMask && (
+            <Button variant="contained" color="primary" onClick={this.handleConnectMetaMask}>
+              Connect MetaMask
+            </Button>
+          )}
+
+          {activeStep !== 0 && (
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={this.handleNext}
+              disabled={activeStep === steps.length - 1}
+            >
+              Next
+            </Button>
+          )}
+        </Box>
+      </Box>
+    );
+  }
+}
+
+export default StepperComponent;
